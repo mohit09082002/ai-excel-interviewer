@@ -1,185 +1,212 @@
-AI-Powered Excel Mock Interviewer
-Project Overview
-This project implements an AI-powered Excel mock interviewer designed to provide a structured and professional technical interview experience. Built as a proof-of-concept, it leverages a large language model (LLM) orchestrated by LangGraph to conduct conversational interviews, with a user-friendly interface powered by Streamlit. This system is ideal for candidates preparing for Excel-focused roles, offering a consistent and unbiased assessment.
+# AI-Powered Excel Mock Interviewer
 
-The core of the application features a sophisticated agent-with-tools architecture, where a primary conversational agent intelligently manages the interview flow, utilizing specialized tools to dynamically ask questions and objectively evaluate candidate responses.
+## Project Overview
 
-Core Features
-Secure User & Admin Login: The application incorporates a robust login system, distinguishing between interview candidates (users) and administrators, ensuring data segregation and controlled access.
+This project implements an **AI-powered Excel mock interviewer**, delivering a structured and professional interview experience. Built as a proof-of-concept, it leverages **LangGraph** for orchestration, **Google Gemini** models for LLM capability, and **Streamlit** for an intuitive interface. It is ideal for candidates preparing for Excel-heavy roles, offering **consistent, fair, and intelligent assessments**.
 
-User Privileges: Regular users can log in with a pre-registered username to take the mock interview. Each user's interview progress and results are tracked and saved. A user can only take the interview once, ensuring fair assessment and preventing repeated attempts from the same account.
+---
 
-Admin Privileges: The administrator has elevated access, allowing them to view a comprehensive dashboard of all user interview results. This provides an overview of candidate performance, interview history, and allows for data oversight. The admin login uses a simple, hardcoded credential for demonstration purposes (admin/admin).
+## Core Features
 
-Persistent Data Storage: All user credentials, their interview status (whether they have taken the test), and comprehensive interview results (including detailed evaluations and verdicts for each question) are securely stored and managed within an Excel file (user_credential_and_analysis.xlsx). This allows for easy review, analysis, and record-keeping, even after the application is closed and restarted.
+- **Secure User & Admin Login**
+  - Distinguishes between interview candidates and administrators
+  - Ensures data privacy and role-based access
 
-Intuitive Admin Dashboard: Administrators can access a dedicated dashboard to view and analyze the complete interview results for all users directly within the application, facilitating oversight and performance tracking. The dashboard displays a table with usernames, test status, and detailed evaluations for each question, including the extracted verdict (Correct, Partially Correct, or Incorrect) in a separate column.
+- **User Experience**
+  - One-time interview per user (validated via Excel-based status tracking)
+  - Dynamic interview driven by an AI persona with strict no-hint policies
 
-Advanced Agentic Architecture: A sophisticated conversational agent, powered by LangGraph, drives the interview process. It intelligently selects and executes specialized tools for tasks such as asking questions, evaluating answers, and concluding the interview, ensuring a dynamic and adaptive interview experience. The agent's behavior is defined by its state machine, ensuring a consistent and controlled interview flow.
+- **Admin Capabilities**
+  - Admin dashboard to view results of all users
+  - Summary verdicts (Correct, Partially Correct, Incorrect) per question
+  - Hardcoded demo credentials: `admin/admin`
 
-Strict Interviewer Persona: The AI interviewer adheres to a strict persona, explicitly programmed via prompts.py to avoid providing hints, examples, or direct answers to technical questions. This ensures a realistic, fair, and challenging interview environment, focusing solely on assessing the candidate's knowledge and problem-solving abilities.
+- **Persistent Excel Storage**
+  - Stores usernames, interview status, detailed responses, evaluations, and verdicts
+  - Uses `user_credential_and_analysis.xlsx`
 
-Stateful Conversation Memory: The agent maintains a complete memory of the entire conversation history using LangGraph's checkpointer. This enables context-aware interactions, allowing the AI to refer back to previous parts of the conversation and ensuring a seamless interview flow, even across multiple turns.
+- **Agentic Architecture (LangGraph)**
+  - Modular tools: `ask_interview_question`, `evaluate_candidate_answer`, etc.
+  - LLM agent state is managed via a robust state machine
 
-Comprehensive Performance Report: Upon interview completion, a detailed and expandable performance summary is generated and displayed directly to the user. This report includes the original question, the AI's detailed evaluation, and a clear verdict (Correct, Partially Correct, or Incorrect) for each question. This report is also saved to the Excel file for administrative review. The user input box is automatically hidden once the report is displayed, indicating the end of the interactive session.
+- **Strict AI Interviewer Persona**
+  - Configured through prompt engineering (in `prompts.py`)
+  - AI does **not** provide examples, hints, or solutions
 
-Tech Stack
-LLM Integration: Configurable via environment variables (.env), supporting Google's Gemini models through langchain-google-genai. This allows for flexible deployment with different LLM providers and models.
+- **Conversation Memory**
+  - Uses LangGraph checkpointer for stateful interviews
+  - Supports context-aware back-referencing
 
-LLM Framework: LangChain for building applications with language models, and langchain-google-genai for seamless integration with Google's generative AI models.
+- **Performance Summary**
+  - Generated and shown at the end of the interview
+  - Saved to Excel for future review
 
-Agentic Logic & State Management: LangGraph for creating robust, stateful, and multi-actor applications with LLMs, managing the complex interview flow and tool orchestration.
+---
 
-Frontend Framework: Streamlit for rapidly building interactive web applications with Python, providing a clean, responsive, and easy-to-use user interface.
+## Tech Stack
 
-Data Management: Pandas for efficient data manipulation and analysis of the Excel file, and OpenPyXL for robust reading and writing of .xlsx files.
+| Layer | Technology |
+|-------|------------|
+| LLM | Google Gemini (via `langchain-google-genai`) |
+| LLM Framework | LangChain |
+| Orchestration | LangGraph |
+| Frontend | Streamlit |
+| Excel I/O | Pandas, OpenPyXL |
+| Env Management | python-dotenv |
+| Typing | typing-extensions |
+| Utilities | langchain-community |
 
-Environment Variables: python-dotenv for securely loading environment variables from a .env file, keeping sensitive information (like API keys) out of the codebase.
+---
 
-Type Hinting: typing-extensions for advanced type hints, improving code readability, maintainability, and enabling static analysis.
+## Project Structure
 
-Core Utilities: langchain-community for common LangChain utilities and integrations.
-
-Project Structure
-This project is organized into several Python files, each serving a distinct purpose:
-
+```bash
 .
-├── .env                              # Environment variables for API keys and model configuration (Crucial for security, DO NOT COMMIT!)
-├── app.py                            # The main Streamlit application. Handles the web UI, user/admin login, and manages the interaction with the LangGraph agent. This is the file you run to start the application.
-├── agent.py                          # Defines the core LangGraph agent. This includes the agent's state, the custom tools (e.g., `ask_interview_question`, `evaluate_candidate_answer`, `conclude_interview`) that the agent can use, and the state machine logic (nodes and edges) that dictates the interview flow.
-├── excel_handler.py                  # A utility module responsible for all interactions with the `user_credential_and_analysis.xlsx` file. It handles initialization of the Excel file, user validation, saving interview results, and retrieving all user data for the admin dashboard.
-├── prompts.py                        # Contains the large language model's system prompts and templates. This includes the `SYSTEM_PROMPT` that defines the AI interviewer's persona and interview flow rules, and `EVALUATION_PROMPT_TEMPLATE` used for assessing candidate answers.
-├── questions.json                    # A JSON file containing the bank of predefined Excel interview questions. Each question includes its category, difficulty, the question text, and expected concepts for evaluation.
-├── requirements.txt                  # Lists all Python package dependencies required to run the project. You use this file with `pip install -r requirements.txt` to set up your environment.
-├── user_credential_and_analysis.xlsx # The Excel file that stores user accounts (usernames, test taken status) and the detailed results of completed interviews. This file is created automatically on first run if it doesn't exist.
-└── README.md                         # This comprehensive documentation file, providing an overview, setup instructions, usage guide, and project details.
+├── .env                              # API keys & model config (DO NOT COMMIT)
+├── app.py                            # Streamlit UI & main logic
+├── agent.py                          # LangGraph agent + state logic
+├── excel_handler.py                  # Handles reading/writing Excel data
+├── prompts.py                        # Interview persona & evaluation prompts
+├── questions.json                    # Bank of Excel interview questions
+├── requirements.txt                  # All Python dependencies
+├── user_credential_and_analysis.xlsx # User data & interview logs
+└── README.md                         # Project documentation
+```
+---
 
-Getting Started
-Follow these steps to set up and run the AI-Powered Excel Mock Interviewer locally.
+## Getting Started
 
-Prerequisites
-Python 3.8 or higher (It's recommended to use the latest stable version of Python 3.)
+### Prerequisites
 
-pip (Python package installer, usually comes with Python installation)
+- Python 3.8 or higher
+- `pip` (Python package installer)
 
-Installation
-Clone the repository (or create project files):
-If you have the project files locally, create a new, empty directory. Then, copy all the project files (app.py, agent.py, excel_handler.py, prompts.py, questions.json, requirements.txt, and the empty .env file you intend to use) into this new directory.
+---
 
-Create a virtual environment (highly recommended):
-Using a virtual environment isolates your project's dependencies from your system's Python packages, preventing conflicts.
+### Installation
 
+#### 1. Clone or Copy Files
+
+Place all project files (`app.py`, `agent.py`, `excel_handler.py`, `prompts.py`, `questions.json`, `requirements.txt`, `.env`) into a single directory.
+
+#### 2. Create a Virtual Environment
+
+```bash
 python -m venv venv
+```
+#### 3. Activate the Environment
 
-Activate the virtual environment:
-
-On macOS/Linux:
-
+```bash
+# macOS/Linux
 source venv/bin/activate
-
-On Windows:
-
+```
+```bash
+# Windows
 venv\Scripts\activate
+```
 
-Install dependencies:
-With your virtual environment activated, install all required Python packages listed in requirements.txt:
-
+#### 4. Install Dependencies
+```bash
 pip install -r requirements.txt
+```
+#### 5. Configure Environment Variables
 
-Configure Environment Variables (The .env file):
-The .env file is crucial for securely storing your API key and LLM configuration without hardcoding them into your application code.
+Create a `.env` file in the project root and add:
 
-Location: Ensure your .env file is in the root directory of your project (the same directory as app.py).
-
-Content: Open the .env file with a text editor and add the following lines. Replace YOUR_GOOGLE_API_KEY_HERE with your actual Google API Key. You can also specify the CHAT_MODEL if you want to use a different Gemini model (e.g., gemini-1.5-flash, gemini-1.5-pro).
-
+```env
 GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY_HERE"
-CHAT_MODEL="gemini-2.0-flash" # Or another Gemini model like gemini-1.5-pro
-# CHAT_URL="https://generativelanguage.googleapis.com/v1beta" # Uncomment and modify if you need a custom endpoint
+CHAT_MODEL="gemini-2.0-flash"
+# CHAT_URL="https://generativelanguage.googleapis.com/v1beta"
+```
+---
+## Preparing User Data
 
-How to get an API Key: You can obtain a Google API Key from the Google AI Studio or Google Cloud Console. Make sure it has access to the Gemini API.
+- `user_credential_and_analysis.xlsx` is created automatically on first run.
+- To manually add users:
+  - Open the file in Excel.
+  - Add usernames under the `username` column.
+  - Set `test_taken` as `FALSE` or leave blank.
 
-Security Note: The .env file is intentionally excluded from version control (.gitignore) because it contains sensitive information. Never commit your .env file to a public repository.
+---
 
-Prepare User Data (user_credential_and_analysis.xlsx):
-This Excel file manages user accounts and stores interview results.
+## Running the Application
 
-Automatic Creation: The first time you run app.py, this Excel file will be automatically created with the necessary columns (username, test_taken, answer_1, evaluation_1, etc.) if it doesn't already exist.
-
-Adding Users: To add new users who can take mock interviews, open user_credential_and_analysis.xlsx (e.g., using Microsoft Excel, Google Sheets, or LibreOffice Calc). Add unique usernames in the username column. Ensure the test_taken column is set to FALSE (or left blank, as the application treats empty cells as FALSE) for new users who haven't completed the interview yet. Save the file after making changes.
-
-Running the Application
-Start the Streamlit application:
-From your project's root directory (where app.py is located), ensure your virtual environment is activated, and then run the command:
-
+```bash
 streamlit run app.py
+```
+Visit in browser:
 
-Access the Interviewer:
-The application will automatically open in your default web browser (usually at http://localhost:8501). If it doesn't, copy and paste the URL provided in your terminal into your browser.
+```txt
+http://localhost:8501
+```
+## Usage
 
-Usage
-User Login (Candidate)
-On the initial login page, select "User" as your login type.
+### User Login (Candidate)
 
-Enter your username. This username must already exist in the user_credential_and_analysis.xlsx file, and the test_taken status for this user must be FALSE (or empty).
+- Select `User` on login.
+- Enter your registered username.
+- Click `Start Interview`.
+- The AI will:
+  - Ask for your name
+  - Start asking technical Excel questions
+  - Evaluate answers using defined prompts
+  - Show verdicts:
+    - `Correct`
+    - `Partially Correct`
+    - `Incorrect`
+- After all questions, the final performance report will be displayed.
+- The chat input is disabled after interview completion.
 
-Click the "Start Interview" button.
+### Admin Login
 
-If the username is valid and the test has not been taken previously, you will be redirected to the interview chat page.
+- Select `Admin` on login.
+- Use credentials:
 
-Admin Login
-On the initial login page, select "Admin" as your login type.
+```txt
+Username: admin
+Password: admin
+```
+- Click `Login as Admin`.
+- Access the admin dashboard.
 
-Enter the default administrative credentials:
+---
 
-Admin Username: admin
+## Interview Flow
 
-Admin Password: admin
+1. AI asks for user's name.  
+2. AI starts asking questions from `questions.json`.  
+3. User submits answers.  
+4. AI evaluates each answer.  
+5. Evaluation and verdict are displayed.  
+6. Final performance report is generated.  
+7. Chat is locked and results are saved.  
 
-Click the "Login as Admin" button.
+---
 
-Upon successful login, you will be directed to the Admin Dashboard.
+## Admin Dashboard
 
-Taking the Interview (as a User)
-Once on the interview page, the AI interviewer, "Excel Ninja," will introduce itself and prompt you to provide your name.
+- Displays:
+  - `username`
+  - `test_taken` status
+  - `answer_X` fields
+  - `evaluation_X` fields
+  - Verdict summary
 
-Type your name in the chat input box and press Enter. The AI will then greet you personally.
+---
+a
+## License
 
-Immediately after the personal greeting, the AI will ask the first technical Excel question.
+Licensed under the **MIT License**.  
 
-Type your answer to the question in the input box and press Enter.
+---
 
-The AI will process your response, evaluate your answer based on the expected_concepts defined in questions.json, and provide a brief evaluation along with a clear verdict (e.g., "Verdict: Correct", "Verdict: Partially Correct", or "Verdict: Incorrect").
+## Contact
 
-This process of asking a question, receiving your answer, and providing evaluation continues for all questions defined in questions.json.
+- [Open an issue](https://github.com/mohit09082002/ai-excel-interviewer/issues)
+- [Start a discussion]([https://github.com/your-repo](https://github.com/mohit09082002/ai-excel-interviewer)/discussions)
+- [Submit a Pull Request](https://github.com/mohit09082002/ai-excel-interviewer/pulls)
 
-Once all questions have been asked and evaluated, the interview will formally conclude. A "Final Performance Report" will be displayed on the screen, summarizing your performance for each question. At this point, the chat input box will automatically disappear, signifying the end of the interactive interview session. Your comprehensive results will be saved to the Excel file.
+---
 
-Viewing Results (as an Admin)
-Log in to the application as an Admin using the default credentials.
 
-The Admin Dashboard will be displayed, presenting a Streamlit dataframe (st.dataframe) that shows all registered users and their interview results.
 
-You can review the test_taken column to see which users have completed the interview.
-
-The evaluation_X columns contain the detailed evaluation text provided by the AI for each question.
-
-The answer_X columns (e.g., answer_1, answer_2) will contain the extracted "Verdict" (Correct, Partially Correct, or Incorrect) for each corresponding question, providing a quick summary of performance.
-
-Contributing
-Contributions are welcome! If you have suggestions for improvements, bug fixes, or new features, please feel free to:
-
-Fork the repository.
-
-Create a new branch (git checkout -b feature/your-feature-name).
-
-Make your changes and ensure they align with the project's coding style and principles.
-
-Commit your changes with a clear and concise message (git commit -m 'Add new feature: [Brief description]').
-
-Push your changes to your new branch (git push origin feature/your-feature-name).
-
-Open a Pull Request to the main repository, providing a detailed description of your changes and their purpose.
-
-License
-This project is open-sourced under the MIT License. A LICENSE file should be included in the repository for full details.
