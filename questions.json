@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "category": "Lookup Functions",
+    "difficulty": "Easy",
+    "question": "Let's start with a common one. Can you explain what the `VLOOKUP` function does in Excel and mention one of its main limitations?",
+    "expected_concepts": "Searches for a value in the first column of a table and returns a value in the same row from a specified column. Limitation: It can only look up values to the right of the lookup column; it cannot look left."
+  },
+  {
+    "id": 2,
+    "category": "Data Aggregation",
+    "difficulty": "Medium",
+    "question": "Imagine you have a sales report with columns for 'Region', 'Product', and 'Sales Amount'. How would you calculate the total sales for the 'North' region for 'Laptops' only?",
+    "expected_concepts": "Use the `SUMIFS` function. It allows summing a range based on multiple criteria. The criteria would be 'North' for the region column and 'Laptops' for the product column."
+  },
+  {
+    "id": 3,
+    "category": "Data Analysis",
+    "difficulty": "Medium",
+    "question": "What are PivotTables in Excel, and what is their primary purpose?",
+    "expected_concepts": "A PivotTable is an interactive tool to summarize, analyze, explore, and present large amounts of data. Its primary purpose is to turn a flat list of data into a structured summary report, allowing for quick data aggregation and analysis without writing complex formulas."
+  },
+  {
+    "id": 4,
+    "category": "Advanced Functions",
+    "difficulty": "Hard",
+    "question": "Why might an analyst prefer using `INDEX` and `MATCH` together instead of `VLOOKUP`?",
+    "expected_concepts": "More flexible and powerful than VLOOKUP. Key advantages include: 1. Can look up values in any column, not just the first one (can look left). 2. More stable, as it refers to a specific column and isn't affected by inserting new columns. 3. Less resource-intensive on large datasets."
+  }
+]
