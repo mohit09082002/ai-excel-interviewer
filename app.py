@@ -5,27 +5,51 @@ import time
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 
 from agent import create_agent, AgentState, ask_interview_question, evaluate_candidate_answer, conclude_interview
 from prompts import SYSTEM_PROMPT
 from excel_handler import initialize_excel_file, validate_user, save_interview_results, get_all_results
 
+# # --- Configuration and Initialization ---
+# load_dotenv()
+# CHAT_KEY = os.getenv("CHAT_KEY")
+# CHAT_URL = os.getenv("CHAT_URL")
+# CHAT_MODEL = os.getenv("CHAT_MODEL")
+
+# # Initialize the LLM once
+# llm = None
+# if CHAT_KEY and CHAT_URL and CHAT_MODEL:
+#     llm = ChatOpenAI(
+#         model=CHAT_MODEL,
+#         api_key=CHAT_KEY,
+#         base_url=CHAT_URL,
+#         temperature=0.7
+#     )
+
 # --- Configuration and Initialization ---
 load_dotenv()
-CHAT_KEY = os.getenv("CHAT_KEY")
-CHAT_URL = os.getenv("CHAT_URL")
-CHAT_MODEL = os.getenv("CHAT_MODEL")
+# Changed to GOOGLE_API_KEY
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# Using a generic URL for Gemini API, if needed. For most cases, you don't need to specify base_url for Google models.
+# If you are using a custom endpoint, specify it here.
+CHAT_URL = os.getenv("CHAT_URL", "https://generativelanguage.googleapis.com/v1beta") # Default for Gemini API
+CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-2.0-flash") # Default to gemini-2.0-flash
 
 # Initialize the LLM once
 llm = None
-if CHAT_KEY and CHAT_URL and CHAT_MODEL:
-    llm = ChatOpenAI(
+# Check for GOOGLE_API_KEY
+if GOOGLE_API_KEY and CHAT_MODEL:
+    llm = ChatGoogleGenerativeAI(
         model=CHAT_MODEL,
-        api_key=CHAT_KEY,
-        base_url=CHAT_URL,
+        google_api_key=GOOGLE_API_KEY, # Use google_api_key parameter
+        # base_url=CHAT_URL, # base_url is usually not needed for standard Gemini API access
         temperature=0.7
     )
+else:
+    st.error("LLM configuration missing. Please ensure GOOGLE_API_KEY and CHAT_MODEL are set in your .env file.")
+
 
 # Load questions once
 def load_questions():
