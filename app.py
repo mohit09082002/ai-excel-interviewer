@@ -2,63 +2,43 @@ import streamlit as st
 import os
 import json
 import time
+import pandas as pd
 from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 
-from agent import create_agent, AgentState, ask_interview_question, evaluate_candidate_answer, conclude_interview
-from prompts import SYSTEM_PROMPT
-from excel_handler import initialize_excel_file, validate_user, save_interview_results, get_all_results
-
-# # --- Configuration and Initialization ---
-# load_dotenv()
-# CHAT_KEY = os.getenv("CHAT_KEY")
-# CHAT_URL = os.getenv("CHAT_URL")
-# CHAT_MODEL = os.getenv("CHAT_MODEL")
-
-# # Initialize the LLM once
-# llm = None
-# if CHAT_KEY and CHAT_URL and CHAT_MODEL:
-#     llm = ChatOpenAI(
-#         model=CHAT_MODEL,
-#         api_key=CHAT_KEY,
-#         base_url=CHAT_URL,
-#         temperature=0.7
-#     )
+from agent import create_agent_graph, AgentState
+from excel_handler import (
+    initialize_excel_file,
+    validate_user,
+    save_interview_results,
+    get_all_results,
+    update_user_interview_type
+)
 
 # --- Configuration and Initialization ---
 load_dotenv()
-# Changed to GOOGLE_API_KEY
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-# Using a generic URL for Gemini API, if needed. For most cases, you don't need to specify base_url for Google models.
-# If you are using a custom endpoint, specify it here.
-CHAT_URL = os.getenv("CHAT_URL", "https://generativelanguage.googleapis.com/v1beta") # Default for Gemini API
-CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-2.0-flash") # Default to gemini-2.0-flash
+CHAT_KEY = os.getenv("GOOGLE_API_KEY") # Updated to use the standard env var name
+CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-1.5-flash")
 
 # Initialize the LLM once
 llm = None
-# Check for GOOGLE_API_KEY
-if GOOGLE_API_KEY and CHAT_MODEL:
-    llm = ChatGoogleGenerativeAI(
-        model=CHAT_MODEL,
-        google_api_key=GOOGLE_API_KEY, # Use google_api_key parameter
-        # base_url=CHAT_URL, # base_url is usually not needed for standard Gemini API access
-        temperature=0.7
-    )
+if CHAT_KEY:
+    llm = ChatGoogleGenerativeAI(model=CHAT_MODEL, google_api_key=CHAT_KEY, temperature=0.7)
 else:
-    st.error("LLM configuration missing. Please ensure GOOGLE_API_KEY and CHAT_MODEL are set in your .env file.")
+    st.error("LLM configuration missing. Please set GOOGLE_API_KEY in your .env file.")
 
-
-# Load questions once
+# Load questions for static and hybrid interviews
 def load_questions():
-    with open("questions.json", "r") as f:
-        return json.load(f)
+    try:
+        with open("questions.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
 interview_questions = load_questions()
 
 # --- App Pages ---
-
 def show_login_page():
     st.header("Login")
     login_type = st.radio("Choose your login type:", ("User", "Admin"))
@@ -67,16 +47,17 @@ def show_login_page():
         username = st.text_input("Enter your username:")
         if st.button("Start Interview"):
             if username:
-                status = validate_user(username)
+                status, interview_type = validate_user(username)
                 if status == "valid":
                     st.session_state.logged_in = True
                     st.session_state.role = "user"
                     st.session_state.username = username
+                    st.session_state.interview_type = interview_type
                     st.rerun()
                 elif status == "taken":
                     st.error("This username has already completed the interview.")
                 else:
-                    st.error("Username not found. Please contact an administrator.")
+                    st.error("Username not found. Please check the username or contact an administrator.")
             else:
                 st.warning("Please enter a username.")
 
@@ -93,46 +74,77 @@ def show_login_page():
                 st.error("Invalid admin credentials.")
 
 def show_admin_dashboard():
-    st.header("Admin Dashboard: Interview Results")
-    st.write("Here you can see the results of all user interviews.")
+    st.header("Admin Dashboard: Interview Results & Configuration")
+    st.write("View results and configure the interview type for each user.")
 
     results_df = get_all_results()
     if not results_df.empty:
-        st.dataframe(results_df)
+        st.info("You can change the 'interview_type' for any user who has not taken the test.")
+        
+        edited_df = st.data_editor(
+            results_df,
+            column_config={
+                "interview_type": st.column_config.SelectboxColumn(
+                    "Interview Type",
+                    help="Set the type of interview for the user.",
+                    options=["Static", "Dynamic", "Hybrid"],
+                    required=True,
+                ),
+                "test_taken": st.column_config.CheckboxColumn(
+                    "Test Taken?",
+                    disabled=True,
+                ),
+                "final_rating": st.column_config.TextColumn(
+                    "Final Rating",
+                    disabled=True,
+                )
+            },
+            disabled=["username", "test_taken", "final_rating"] + [col for col in results_df.columns if "answer_" in col or "evaluation_" in col],
+            num_rows="dynamic" # Allows adding new users
+        )
+
+        if st.button("Save Changes"):
+            # Compare the dataframes to find changes
+            for index, row in edited_df.iterrows():
+                original_row = results_df.loc[results_df['username'] == row['username']]
+                if not original_row.empty:
+                    if original_row.iloc[0]['interview_type'] != row['interview_type']:
+                        update_user_interview_type(row['username'], row['interview_type'])
+            st.success("Changes saved successfully!")
+            st.rerun()
+
     else:
-        st.info("No interview results found.")
+        st.info("No interview results found. The file might be empty.")
 
     if st.button("Logout"):
-        for key in st.session_state.keys():
+        for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
-
 
 def show_interview_page():
     # --- Session State and Agent Initialization ---
     if "agent" not in st.session_state:
-        # Each user gets their own thread
-        thread_id = f"interview-session-{st.session_state.username}-{int(time.time())}"
+        interview_type = st.session_state.get("interview_type", "Static")
+        st.subheader(f"Mode: {interview_type} Interview")
+
+        thread_id = f"interview-{interview_type}-{st.session_state.username}-{int(time.time())}"
         st.session_state.thread_config = {"configurable": {"thread_id": thread_id}}
 
         memory = MemorySaver()
-        tools = [ask_interview_question, evaluate_candidate_answer, conclude_interview]
-        st.session_state.agent = create_agent(llm, tools, checkpointer=memory)
+        st.session_state.agent = create_agent_graph(llm, checkpointer=memory, interview_type=interview_type)
 
-        # Initial state for a new interview
         initial_state: AgentState = {
-            "messages": [
-                SystemMessage(content=SYSTEM_PROMPT),
-                # Changed the initial HumanMessage to a generic internal signal
-                HumanMessage(content="INITIALIZE_INTERVIEW_AGENT")
-            ],
-            "interview_questions": interview_questions,
+            "messages": [HumanMessage(content="INITIALIZE_INTERVIEW_AGENT")],
+            "interview_questions": interview_questions if interview_type in ["Static", "Hybrid"] else [],
             "question_number": 0,
             "feedback_report": [],
             "interview_finished": False,
-            "user_name": st.session_state.username # user_name is still passed here
+            "user_name": st.session_state.username,
+            "interview_type": interview_type,
+            "current_question": "",
+            "final_rating": None,
         }
-        with st.spinner("Initializing interview..."):
+        with st.spinner(f"Initializing {interview_type} interview..."):
             st.session_state.agent.invoke(initial_state, st.session_state.thread_config)
         st.session_state.processing = False
 
@@ -142,26 +154,20 @@ def show_interview_page():
     # Display chat history
     history = st.session_state.agent.get_state(st.session_state.thread_config)
     if history:
-        # Filter out the initial system message and the internal trigger message from display
         for message in history.values['messages']:
             if isinstance(message, SystemMessage) or \
                (isinstance(message, HumanMessage) and message.content == "INITIALIZE_INTERVIEW_AGENT"):
                 continue
-
             if isinstance(message, HumanMessage):
                 with st.chat_message("human"):
                     st.markdown(message.content)
-            elif isinstance(message, AIMessage) and not message.tool_calls:
+            elif isinstance(message, AIMessage) and not message.tool_calls and message.content:
                 with st.chat_message("ai"):
                     st.markdown(message.content)
 
-    # Get the current state to check if the interview is finished
     current_state = st.session_state.agent.get_state(st.session_state.thread_config)
     interview_is_finished = current_state and current_state.values.get("interview_finished", False)
 
-    # This block captures new user input and triggers the processing stage
-    # The chat input is disabled if processing or if the interview is finished
-    # Only display the chat input if the interview is NOT finished
     if not interview_is_finished:
         if prompt := st.chat_input("Your answer...", disabled=st.session_state.processing):
             st.session_state.processing = True
@@ -171,63 +177,54 @@ def show_interview_page():
             )
             st.rerun()
 
-    # This block runs the agent when the app is in a processing state
     if st.session_state.processing:
         with st.spinner("Thinking..."):
             st.session_state.agent.invoke(None, st.session_state.thread_config)
         st.session_state.processing = False
         st.rerun()
 
-
-    # Display the final report and save results
     final_state = st.session_state.agent.get_state(st.session_state.thread_config)
     if final_state and final_state.values.get("interview_finished", False):
         st.markdown("---")
         st.header("Final Performance Report")
 
+        final_rating = final_state.values.get("final_rating")
+        if final_rating:
+            st.metric(label="**Final Interview Score**", value=final_rating)
+        
         feedback_data = final_state.values["feedback_report"]
         for item in feedback_data:
-            try:
-                question = item.get("question", "Unknown Question")
-                evaluation = item.get("evaluation", "No evaluation found.")
-                with st.expander(label=f"**{question}**"):
-                    st.markdown(evaluation)
-            except Exception:
-                st.markdown("Could not display one of the feedback items.")
+            with st.expander(label=f"**{item.get('question', 'Unknown Question')}**"):
+                st.markdown(f"**Your Answer:**\n{item.get('user_answer', 'N/A')}")
+                st.markdown("---")
+                st.markdown(f"**Evaluation:**\n{item.get('evaluation', 'No evaluation found.')}")
 
-        # Save results to Excel file
+
         if "results_saved" not in st.session_state:
-            save_interview_results(st.session_state.username, feedback_data)
+            save_interview_results(st.session_state.username, feedback_data, final_rating)
             st.session_state.results_saved = True
             st.success("Your interview results have been saved.")
 
         if st.button("Logout"):
-            for key in st.session_state.keys():
+            for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
-
 
 # --- Main App ---
 def main():
     st.set_page_config(page_title="AI Excel Interviewer", page_icon="🤖", layout="wide")
     st.title("AI-Powered Excel Interviewer")
 
-    # Ensure Excel file exists before any logic
     initialize_excel_file()
 
-    # Initialize session state for login
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
-        st.session_state.role = None
-        st.session_state.username = None
 
-    # Page routing
     if not st.session_state.logged_in:
         show_login_page()
-    elif st.session_state.role == "admin":
+    elif st.session_state.get("role") == "admin":
         show_admin_dashboard()
-    elif st.session_state.role == "user":
-        # Check for LLM configuration only if a user is trying to take the interview
+    elif st.session_state.get("role") == "user":
         if not llm:
             st.warning("The interview system is not configured. Please contact an administrator.")
             st.stop()
