@@ -1,10 +1,9 @@
 streamlit==1.36.0
 langchain==0.2.11
-langchain-openai==0.1.19 # Kept for compatibility if older models are used, but langchain-google-genai is primary
 langgraph==0.0.69
 pandas==2.2.2
 python-dotenv==1.0.1
 langchain-community==0.2.10
 typing-extensions==4.12.2
 openpyxl==3.1.5
-langchain-google-genai==1.0.0 # Required for Google Gemini LLM integration
+langchain-google-genai
