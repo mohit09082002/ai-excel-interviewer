@@ -8,21 +8,28 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 
+# --- Get the absolute path of the directory containing this script ---
+# This is a robust way to make sure file paths work in any environment
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Construct paths to the files
+DOTENV_PATH = os.path.join(SCRIPT_DIR, ".env")
+QUESTIONS_PATH = os.path.join(SCRIPT_DIR, "questions.json")
+
+# It's better to import from the module directly
 from agent import create_agent_graph, AgentState
 from excel_handler import (
     initialize_excel_file,
     validate_user,
     save_interview_results,
-    get_all_results,
-    EXCEL_FILE
+    get_all_results
 )
+
 
 # --- Function to save API key to .env file ---
 def save_api_key(api_key):
     """Saves the Google API Key to a .env file."""
-    # Use set_key which handles creating the file and updating the value
-    set_key(".env", "GOOGLE_API_KEY", api_key)
-    set_key(".env", "CHAT_MODEL", "gemini-1.5-flash")
+    set_key(DOTENV_PATH, "GOOGLE_API_KEY", api_key)
+    set_key(DOTENV_PATH, "CHAT_MODEL", "gemini-1.5-flash")
     return True
 
 # --- App Pages ---
@@ -87,8 +94,9 @@ def show_admin_dashboard():
 
         if st.button("Save Changes"):
             try:
+                from excel_handler import EXCEL_FILE_PATH
                 edited_df['num_questions'] = edited_df['num_questions'].fillna(pd.NA)
-                edited_df.to_excel(EXCEL_FILE, index=False)
+                edited_df.to_excel(EXCEL_FILE_PATH, index=False)
                 st.success("Changes saved successfully!")
                 st.rerun()
             except Exception as e:
@@ -182,9 +190,10 @@ def show_interview_page(llm, interview_questions):
 def load_questions():
     """Loads interview questions from the JSON file."""
     try:
-        with open("questions.json", "r") as f:
+        with open(QUESTIONS_PATH, "r") as f:
             return json.load(f)
     except FileNotFoundError:
+        st.error(f"Fatal Error: questions.json not found at {QUESTIONS_PATH}")
         return []
 
 def main():
@@ -193,7 +202,7 @@ def main():
 
     # --- Sidebar for API Key Configuration ---
     st.sidebar.header("Configuration")
-    st.sidebar.markdown("Enter your Google GenAI Gemini API Key to begin.")
+    st.sidebar.markdown("Enter your Google API Key to begin. ")
     
     api_key_input = st.sidebar.text_input(
         "GOOGLE_API_KEY", type="password", label_visibility="collapsed"
@@ -210,7 +219,7 @@ def main():
             st.sidebar.warning("Please enter your API Key.")
 
     # --- Main Application Logic ---
-    load_dotenv()
+    load_dotenv(dotenv_path=DOTENV_PATH)
     CHAT_KEY = os.getenv("GOOGLE_API_KEY")
     CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-1.5-flash")
 
@@ -242,4 +251,10 @@ def main():
         show_interview_page(llm, interview_questions)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        # This will catch any unhandled exceptions during startup and display them
+        st.error("An unexpected error occurred. Please check the logs.")
+        st.exception(e)
+
