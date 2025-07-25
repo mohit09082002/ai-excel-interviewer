@@ -54,7 +54,7 @@ def generate_dynamic_question(state: AgentState, request: str) -> str:
     print("\n---GENERATING DYNAMIC QUESTION---")
     history_summary = [f"- Asked: '{r['question']}' -> Verdict: {r.get('verdict', 'N/A')}" for r in state.get("feedback_report", [])]
     history_str = "\n".join(history_summary) if history_summary else "No questions have been asked yet."
-    gen_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-1.5-flash"), temperature=0.8)
+    gen_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-2.0-flash"), temperature=0.8)
     prompt = QUESTION_GENERATION_PROMPT_TEMPLATE.format(history=history_str, request=request)
     new_question = gen_llm.invoke(prompt).content
     print(f"Generated new question: {new_question}")
@@ -68,7 +68,7 @@ def generate_hybrid_question(state: AgentState, request: str) -> str:
     history_str = "\n".join(history_summary) if history_summary else "No questions have been asked yet."
     static_questions = state.get("interview_questions", [])
     curriculum = "\n".join([f"- {q['question']} (Covers: {q['expected_concepts']})" for q in static_questions])
-    gen_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-1.5-flash"), temperature=0.85)
+    gen_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-2.0-flash"), temperature=0.85)
     prompt = HYBRID_QUESTION_GENERATION_PROMPT_TEMPLATE.format(static_questions=curriculum, history=history_str, request=request)
     new_question = gen_llm.invoke(prompt).content
     print(f"Generated new question: {new_question}")
@@ -79,7 +79,7 @@ def evaluate_candidate_answer(user_answer: str, state: AgentState) -> str:
     """Use this tool to evaluate a candidate's answer to the most recent technical question."""
     print("\n---EVALUATING ANSWER---")
     interview_type = state.get("interview_type", "Static")
-    eval_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-1.5-flash"), temperature=0.0)
+    eval_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-2.0-flash"), temperature=0.0)
     if interview_type == "Static":
         q_number = state.get("question_number", 0)
         questions = state.get("interview_questions", [])
@@ -100,7 +100,7 @@ def judge_interview_performance(state: AgentState) -> str:
     feedback_report = state.get("feedback_report", [])
     transcript_parts = [f"Question: {r['question']}\nCandidate's Answer: {r['user_answer']}\nEvaluation: {r['evaluation']}\n" for r in feedback_report]
     interview_transcript = "\n".join(transcript_parts)
-    judging_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-1.5-flash"), temperature=0.2)
+    judging_llm = ChatGoogleGenerativeAI(model=os.getenv("CHAT_MODEL", "gemini-2.0-flash"), temperature=0.2)
     prompt = FINAL_JUDGING_PROMPT_TEMPLATE.format(interview_transcript=interview_transcript)
     final_judgment = judging_llm.invoke(prompt).content
     print(f"Final Judgment: {final_judgment}")

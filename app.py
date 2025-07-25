@@ -20,7 +20,7 @@ from excel_handler import (
 # --- Configuration and Initialization ---
 load_dotenv()
 CHAT_KEY = os.getenv("GOOGLE_API_KEY")
-CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-1.5-flash")
+CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-2.0-flash")
 
 llm = None
 if CHAT_KEY:
@@ -45,14 +45,13 @@ def show_login_page():
         username = st.text_input("Enter your username:")
         if st.button("Start Interview"):
             if username:
-                # --- MODIFIED: Validate user now returns num_questions ---
                 status, interview_type, num_questions = validate_user(username)
                 if status == "valid":
                     st.session_state.logged_in = True
                     st.session_state.role = "user"
                     st.session_state.username = username
                     st.session_state.interview_type = interview_type
-                    st.session_state.num_questions = num_questions # Store num_questions
+                    st.session_state.num_questions = num_questions
                     st.rerun()
                 elif status == "taken":
                     st.error("This username has already completed the interview.")
@@ -74,37 +73,59 @@ def show_login_page():
                 st.error("Invalid admin credentials.")
 
 def show_admin_dashboard():
-    st.header("Admin Dashboard: Interview Results & Configuration")
-    st.write("View results and configure interview settings for each user.")
+    st.header("Admin Dashboard: Interview Results & User Management")
+    st.write("View results, manage users, and configure interview settings.")
 
     results_df = get_all_results()
     if not results_df.empty:
-        st.info("You can change settings for any user who has not taken the test.")
+        st.info("You can add/delete users and change settings for anyone who has not taken the test. Usernames for completed interviews cannot be changed.")
         
-        # --- MODIFIED: Added num_questions to the data editor ---
         edited_df = st.data_editor(
             results_df,
             column_config={
+                "username": st.column_config.TextColumn(
+                    "Username", help="The candidate's unique username.", required=True,
+                ),
                 "interview_type": st.column_config.SelectboxColumn(
                     "Interview Type", options=["Static", "Dynamic", "Hybrid"], required=True,
                 ),
                 "num_questions": st.column_config.NumberColumn(
-                    "Number of Questions", help="Set number of questions for Dynamic/Hybrid interviews.", min_value=1, max_value=10, step=1,
+                    "Number of Questions", help="Set number of questions for Dynamic/Hybrid interviews (e.g., 5). Leave empty for Static.", min_value=1, max_value=10, step=1,
                 ),
                 "test_taken": st.column_config.CheckboxColumn("Test Taken?", disabled=True),
                 "final_rating": st.column_config.TextColumn("Final Rating", disabled=True),
             },
-            disabled=["username", "test_taken", "final_rating"] + [col for col in results_df.columns if "answer_" in col or "evaluation_" in col],
+            disabled=[col for col in results_df.columns if "answer_" in col or "evaluation_" in col or col in ["test_taken", "final_rating"]],
             num_rows="dynamic"
         )
 
         if st.button("Save Changes"):
             try:
-                # Fill NaN in num_questions before saving to avoid issues with float conversion
-                edited_df['num_questions'] = edited_df['num_questions'].fillna(pd.NA)
-                edited_df.to_excel(EXCEL_FILE, index=False)
-                st.success("Changes saved successfully!")
-                st.rerun()
+                original_df = get_all_results()
+                validation_error = False
+
+                for index, edited_row in edited_df.iterrows():
+                    if index in original_df.index:
+                        original_row = original_df.loc[index]
+                        if original_row['test_taken'] == True and original_row['username'] != edited_row['username']:
+                            st.error(f"Error: Cannot rename user '{original_row['username']}' because they have already completed the interview.")
+                            validation_error = True
+                            break
+                
+                if not validation_error and edited_df['username'].duplicated().any():
+                    st.error("Error: Usernames must be unique. Please resolve duplicate entries before saving.")
+                    validation_error = True
+                
+                if not validation_error and edited_df['username'].isnull().any():
+                    st.error("Error: Username cannot be empty. Please enter a username for all users.")
+                    validation_error = True
+
+                if not validation_error:
+                    edited_df['num_questions'] = pd.to_numeric(edited_df['num_questions'], errors='coerce').astype('Int64')
+                    edited_df.to_excel(EXCEL_FILE, index=False)
+                    st.success("Changes saved successfully!")
+                    st.rerun()
+
             except Exception as e:
                 st.error(f"Failed to save changes: {e}")
 
@@ -117,17 +138,16 @@ def show_admin_dashboard():
         st.rerun()
 
 def show_interview_page():
-    if "agent" not in st.session_state:
-        interview_type = st.session_state.get("interview_type", "Static")
-        st.subheader(f"Mode: {interview_type} Interview")
+    interview_type = st.session_state.get("interview_type", "Static")
+    st.subheader(f"Mode: {interview_type} Interview")
 
+    if "agent" not in st.session_state:
         thread_id = f"interview-{interview_type}-{st.session_state.username}-{int(time.time())}"
         st.session_state.thread_config = {"configurable": {"thread_id": thread_id}}
 
         memory = MemorySaver()
         st.session_state.agent = create_agent_graph(llm, checkpointer=memory, interview_type=interview_type)
         
-        # --- MODIFIED: Pass num_questions into the agent's initial state ---
         initial_state: AgentState = {
             "messages": [HumanMessage(content="INITIALIZE_INTERVIEW_AGENT")],
             "interview_questions": interview_questions if interview_type in ["Static", "Hybrid"] else [],
@@ -144,17 +164,34 @@ def show_interview_page():
         st.session_state.processing = False
 
     history = st.session_state.agent.get_state(st.session_state.thread_config)
-    if history:
-        for message in history.values['messages']:
-            if isinstance(message, (SystemMessage, ToolMessage)) or (isinstance(message, HumanMessage) and message.content == "INITIALIZE_INTERVIEW_AGENT"):
-                continue
-            if isinstance(message, HumanMessage):
-                with st.chat_message("human"): st.markdown(message.content)
-            elif isinstance(message, AIMessage) and not message.tool_calls and message.content:
-                with st.chat_message("ai"): st.markdown(message.content)
+    if not history:
+        st.rerun()
 
-    current_state = st.session_state.agent.get_state(st.session_state.thread_config)
-    interview_is_finished = current_state and current_state.values.get("interview_finished", False)
+    # --- NEW: Progress Bar Logic ---
+    interview_is_finished = history.values.get("interview_finished", False)
+    if not interview_is_finished:
+        if interview_type == "Static":
+            total_questions = len(interview_questions)
+        else:
+            total_questions = st.session_state.get("num_questions", 5)
+
+        questions_answered = len(history.values.get("feedback_report", []))
+        
+        if total_questions > 0:
+            current_q_display_num = min(questions_answered + 1, total_questions)
+            st.markdown(f"**Question {current_q_display_num} of {total_questions}**")
+            progress_value = questions_answered / total_questions
+            st.progress(progress_value)
+            st.markdown("---")
+    # --- End of Progress Bar Logic ---
+
+    for message in history.values['messages']:
+        if isinstance(message, (SystemMessage, ToolMessage)) or (isinstance(message, HumanMessage) and message.content == "INITIALIZE_INTERVIEW_AGENT"):
+            continue
+        if isinstance(message, HumanMessage):
+            with st.chat_message("human"): st.markdown(message.content)
+        elif isinstance(message, AIMessage) and not message.tool_calls and message.content:
+            with st.chat_message("ai"): st.markdown(message.content)
 
     if not interview_is_finished:
         if prompt := st.chat_input("Your answer...", disabled=st.session_state.processing):
