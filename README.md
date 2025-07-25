@@ -7,7 +7,7 @@ An AI-powered system that automates Excel skills assessment through intelligent 
 
 ---
 
-## 🎯 Project Mission
+## Project Mission
 
 **Problem**: Manual Excel screening creates hiring bottlenecks, inconsistent evaluations, and wastes senior analysts' time.
 
@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/292e1254-57aa-4ed9-95d6-b16801a9da83
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ai-excel-interviewer/
@@ -38,17 +38,22 @@ ai-excel-interviewer/
 ```
 ---
 
-## 🛠️ Tech Stack
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **LLM** | Google Gemini 1.5 Flash | Intelligent questioning and evaluation |
-| **Agent Framework** | LangGraph + LangChain | Finite State Machine for interview flow |
-| **Frontend** | Streamlit | Interactive UI and admin dashboard |
-| **Data Storage** | Pandas + OpenPyXL | Lightweight file-based persistence |
+## Tech Stack & Architectural Choices
+
+We had full autonomy over the tech stack. The following choices were made to prioritize rapid development, robustness, and cost-effectiveness for this PoC.
+
+| Layer | Technology | Justification |
+| :--- | :--- | :--- |
+| **LLM** | **Google Gemini 2.0 Flash** | A powerful, multi-modal, and cost-effective solution. The live application is currently powered by a personal API key for demonstration purposes. |
+| **Agent Framework** | **LangChain & LangGraph** | **LangChain** provides the essential abstractions for prompt management and tool integration. **LangGraph** is the architectural core, allowing us to model the interview flow.|
+| **Frontend** | **Streamlit** | For a PoC. Streamlit's **stateful rerun model** maps well to the request-response cycle of a chat application, enabling the creation of a functional, interactive UI with minimal code. |
+| **Data Storage** | **Pandas & OpenPyXL** | A **lightweight, file-based persistence layer** to avoid the setup overhead of a relational or NoSQL database.|
+
+---
 
 
-## 🏗️ Live Application & Technical Architecture
+## Live Application & Technical Architecture
 | Live Application | Technical Architecture |
 | :---: | :---: |
 | [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](flowchart.png) |
@@ -148,18 +153,7 @@ A key challenge in building an AI evaluation system is the "cold start" problem:
 
 This three-mode strategy allows administrators to tailor the assessment to the seniority and requirements of any given role, providing a flexible yet robust solution.
 
----
 
-## Tech Stack & Architectural Choices
-
-We had full autonomy over the tech stack. The following choices were made to prioritize rapid development, robustness, and cost-effectiveness for this PoC.
-
-| Layer | Technology | Justification |
-| :--- | :--- | :--- |
-| **LLM** | **Google Gemini 1.5 Flash** | The Gemini family of models offers a powerful, multi-modal, and cost-effective solution. Its strong **instruction-following capabilities** are vital for adhering to the zero-shot role-playing prompts that define the agent's persona and evaluation accuracy. The live application is currently powered by a personal API key for demonstration purposes. |
-| **Orchestration** | **LangChain & LangGraph** | **LangChain** provides the essential abstractions for prompt management and tool integration. **LangGraph** is the architectural core, allowing us to model the interview flow as a **Finite State Machine (FSM)**. This is inherently more robust and debuggable than monolithic agent loops, enabling **explicit state transitions** (e.g., from `ASKING` to `EVALUATING`) which are critical for a structured, multi-turn process. |
-| **Frontend** | **Streamlit** | For a PoC, maximizing development velocity is key. Streamlit's **stateful rerun model** maps well to the request-response cycle of a chat application, enabling the creation of a functional, interactive UI with minimal boilerplate code. Its native components are ideal for both the chat interface and the admin dashboard. |
-| **Data Storage** | **Pandas & OpenPyXL** | We opted for a **lightweight, file-based persistence layer** to avoid the setup overhead of a relational or NoSQL database. This is a pragmatic choice for a PoC, where rapid iteration is more important than transactional integrity or concurrent access. |
 
 ---
 
@@ -215,7 +209,7 @@ This PoC provides a robust foundation. A production-grade system would require t
 5.  **Expanded Question Bank & Curriculum:** The `questions.json` curriculum could be significantly expanded and structured by topic and difficulty, covering a wider range of Excel capabilities like Power Query, advanced charting, and VBA macros.
 
 
-## 📧 Contact
+## Contact
 
 Mohit - [GitHub Profile](https://github.com/mohit09082002)
 
