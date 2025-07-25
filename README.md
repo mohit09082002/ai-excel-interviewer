@@ -4,7 +4,7 @@
 
 | Live Application | Technical Architecture |
 | :---: | :---: |
-| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](Untitled-2025-07-22-0151.png) |
+| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](flowchart.png) |
 
 **Demonstration Video**
 
