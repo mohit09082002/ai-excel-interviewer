@@ -60,7 +60,7 @@ We had full autonomy over the tech stack. The following choices were made to pri
 ## Live Application & Technical Architecture
 | Live Application | Technical Architecture |
 | :---: | :---: |
-| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](images\flowchart.png) |
+| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](images/flowchart.png) |
 
 --- 
 
@@ -139,7 +139,7 @@ Follow these steps to run the project locally.
 ---
 
 ## The Strategy: Solving the "Cold Start" Problem with Three Interview Modes
-![Interview Modes Strategy](images\Interview_Modes_Strategy.png)
+![Interview Modes Strategy](images/Interview_Modes_Strategy.png)
 
 A key challenge in building an AI evaluation system is the "cold start" problem: how do you ensure quality and relevance without a pre-existing dataset of interview transcripts? Our strategy directly addresses this by implementing three distinct, configurable interview modes. This multi-pronged approach allows us to bootstrap the system effectively and evolve its capabilities over time.
 
@@ -202,7 +202,7 @@ This is the main Streamlit application file that orchestrates the user experienc
 
 ## Future Improvements & Scalability
 
-![Future Enhancements](images\future_work.png)
+![Future Enhancements](images/future_work.png)
 
 This PoC provides a robust foundation. A production-grade system would require the following enhancements:
 
