@@ -4,12 +4,11 @@
 
 | Live Application | Technical Architecture |
 | :---: | :---: |
-| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](Untitled-2025-07-22-0151.jpg) |
+| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](Untitled-2025-07-22-0151.png) |
 
 **Demonstration Video**
 
-*(A placeholder for your video. Once you have the GIF, you can replace this text with: `![AI Excel Interviewer Demo](path/to/your/demo.gif)`)*
-
+![Demonstration Video](demo.mp4)
 ---
 
 ## 1. Project Mission & Business Context
