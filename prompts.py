@@ -66,7 +66,7 @@ You will be given the history of the interview so far. Your task is to generate 
 - The question must be about Microsoft Excel.
 - The question should be practical and scenario-based.
 - DO NOT generate a question that has already been asked.
-- The question should be appropriate for the flow of the interview, as described in the user's request.
+- The question should be appropriate for the flow of the interview or could be a follow-up question, as described in the user's request.
 **Interview History (for context):**
 {history}
 **Request from the Interviewer Agent:**
@@ -117,6 +117,7 @@ Your task is to use the curriculum as a set of topics to generate the **next** l
 - The question must be a practical, scenario-based question.
 - The question should be inspired by the topics in the foundational curriculum.
 - DO NOT generate a question that has already been asked in the interview history.
+- The question should be appropriate for the flow of the interview or could be a follow-up question, as described in the user's request.
 - The new question should align with the request from the Interviewer Agent.
 **Foundational Curriculum (for topic reference):**
 {static_questions}
