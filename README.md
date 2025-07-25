@@ -24,17 +24,21 @@ https://github.com/user-attachments/assets/292e1254-57aa-4ed9-95d6-b16801a9da83
 ## Project Structure
 
 ```
-ai-excel-interviewer/
-├── app.py                              # Main Streamlit application
-├── agent.py                            # LangGraph FSM and agent logic
-├── prompts.py                          # AI prompts and persona definitions
-├── excel_handler.py                    # Data persistence layer
-├── questions.json                      # Question bank and curriculum
-├── user_credential_and_analysis.xlsx   # User data and results
-├── requirements.txt                    # Python dependencies
-├── .env                                # Environment variables (API keys)
-├── flowchart.png                       # Architecture diagram
-└── README.md                           # This file
+EXCEL_INTERVIEWER_AI/
+├── images/                          # Visual assets and diagrams
+│   ├── flowchart.png                   # System architecture diagram
+│   ├── future_work.png                 # Future enhancements roadmap
+│   └── Interview_Modes_Strategy.png    # Interview modes visualization
+├── .EXAMPLE_env                             # Example Environment variables (API keys)
+├── .gitignore                       # Git ignore rules
+├── agent.py                         # LangGraph FSM and agent logic
+├── app.py                           # Main Streamlit application
+├── excel_handler.py                 # Data persistence layer
+├── prompts.py                       # AI prompts and persona definitions
+├── questions.json                   # Question bank and curriculum
+├── README.md                        # Project documentation
+├── requirements.txt                 # Python dependencies
+└── user_credential_and_analysis.xlsx # User data and results storage
 ```
 ---
 
@@ -56,7 +60,7 @@ We had full autonomy over the tech stack. The following choices were made to pri
 ## Live Application & Technical Architecture
 | Live Application | Technical Architecture |
 | :---: | :---: |
-| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](flowchart.png) |
+| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](images\flowchart.png) |
 
 --- 
 
@@ -135,7 +139,7 @@ Follow these steps to run the project locally.
 ---
 
 ## The Strategy: Solving the "Cold Start" Problem with Three Interview Modes
-![Interview Modes Strategy](Interview_Modes_Strategy.png)
+![Interview Modes Strategy](images\Interview_Modes_Strategy.png)
 
 A key challenge in building an AI evaluation system is the "cold start" problem: how do you ensure quality and relevance without a pre-existing dataset of interview transcripts? Our strategy directly addresses this by implementing three distinct, configurable interview modes. This multi-pronged approach allows us to bootstrap the system effectively and evolve its capabilities over time.
 
@@ -161,7 +165,7 @@ This three-mode strategy allows administrators to tailor the assessment to the s
 
 The project is structured into modular components, each with a specific responsibility, following separation of concerns.
 
-### `agent.py`: The Brain of the Operation (The FSM)
+### `agent.py`: The Brain of the Operation
 
 This file defines the core agentic logic using LangGraph.
 
@@ -198,7 +202,7 @@ This is the main Streamlit application file that orchestrates the user experienc
 
 ## Future Improvements & Scalability
 
-![Future Enhancements](future_work.png)
+![Future Enhancements](images\future_work.png)
 
 This PoC provides a robust foundation. A production-grade system would require the following enhancements:
 
