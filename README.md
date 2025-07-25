@@ -15,7 +15,7 @@ An AI-powered system that automates Excel skills assessment through intelligent 
 
 ---
 
-## 🎬 Demo
+## Demo
 
 https://github.com/user-attachments/assets/292e1254-57aa-4ed9-95d6-b16801a9da83
 
@@ -135,7 +135,7 @@ Follow these steps to run the project locally.
 ---
 
 ## The Strategy: Solving the "Cold Start" Problem with Three Interview Modes
-![Interview Modes Strategy](interview_modes_strategy.png)
+![Interview Modes Strategy](Interview_Modes_Strategy.png)
 
 A key challenge in building an AI evaluation system is the "cold start" problem: how do you ensure quality and relevance without a pre-existing dataset of interview transcripts? Our strategy directly addresses this by implementing three distinct, configurable interview modes. This multi-pronged approach allows us to bootstrap the system effectively and evolve its capabilities over time.
 
