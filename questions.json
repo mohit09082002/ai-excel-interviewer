@@ -1,30 +1,30 @@
 [
   {
     "id": 1,
-    "category": "Lookup Functions",
+    "category": "Core Concepts",
     "difficulty": "Easy",
-    "question": "Let's start with a common one. Can you explain what the `VLOOKUP` function does in Excel and mention one of its main limitations?",
-    "expected_concepts": "Searches for a value in the first column of a table and returns a value in the same row from a specified column. Limitation: It can only look up values to the right of the lookup column; it cannot look left."
+    "question": "What is the difference between relative, absolute, and mixed cell references in Excel? Please provide a simple example of each.",
+    "expected_concepts": "A correct answer must define all three. Relative reference (e.g., A1) changes when a formula is copied. Absolute reference (e.g., $A$1) remains constant no matter where the formula is copied. Mixed reference (e.g., $A1 or A$1) has one part absolute and one part relative. A good example is using them to create a multiplication table."
   },
   {
     "id": 2,
-    "category": "Data Aggregation",
+    "category": "Data Integrity",
     "difficulty": "Medium",
-    "question": "Imagine you have a sales report with columns for 'Region', 'Product', and 'Sales Amount'. How would you calculate the total sales for the 'North' region for 'Laptops' only?",
-    "expected_concepts": "Use the `SUMIFS` function. It allows summing a range based on multiple criteria. The criteria would be 'North' for the region column and 'Laptops' for the product column."
+    "question": "Imagine you need to create a dependent dropdown list. If a user selects a 'Region' (e.g., 'North') in cell A1, you want cell B1 to show a dropdown of only the cities in that region. How would you achieve this?",
+    "expected_concepts": "This requires a combination of Named Ranges and the `INDIRECT` function within Data Validation. The process is: 1. Create separate lists of cities for each region. 2. Name each list according to its region (e.g., a list of northern cities is named 'North'). 3. Select cell B1, go to Data Validation, choose 'List' for 'Allow', and enter the formula `=INDIRECT(A1)` as the source."
   },
   {
     "id": 3,
-    "category": "Data Analysis",
-    "difficulty": "Medium",
-    "question": "What are PivotTables in Excel, and what is their primary purpose?",
-    "expected_concepts": "A PivotTable is an interactive tool to summarize, analyze, explore, and present large amounts of data. Its primary purpose is to turn a flat list of data into a structured summary report, allowing for quick data aggregation and analysis without writing complex formulas."
+    "category": "Advanced Formulas",
+    "difficulty": "Hard",
+    "question": "You have a dataset with 'Product', 'Month', and 'Sales'. You need to find the sales amount for a specific product in a specific month. Without using `XLOOKUP`, `SUMIFS`, or `FILTER`, how can you perform this two-criteria lookup using an array formula?",
+    "expected_concepts": "The classic solution is an array formula using `INDEX` and `MATCH`. The key is to perform a multi-criteria match by concatenating the lookup values and the lookup arrays within the `MATCH` function. The formula would look like: `=INDEX(sales_range, MATCH(product_value & month_value, product_range & month_range, 0))`. The candidate must mention that this needs to be entered with Ctrl+Shift+Enter in older Excel versions."
   },
   {
     "id": 4,
-    "category": "Advanced Functions",
+    "category": "Power Query",
     "difficulty": "Hard",
-    "question": "Why might an analyst prefer using `INDEX` and `MATCH` together instead of `VLOOKUP`?",
-    "expected_concepts": "More flexible and powerful than VLOOKUP. Key advantages include: 1. Can look up values in any column, not just the first one (can look left). 2. More stable, as it refers to a specific column and isn't affected by inserting new columns. 3. Less resource-intensive on large datasets."
+    "question": "You receive a 'cross-tab' report where years are column headers (e.g., 2022, 2023, 2024) and products are row labels. This format is not suitable for a PivotTable. How would you use Power Query to transform this into a 'normalized' table with three columns: 'Product', 'Year', and 'Sales'?",
+    "expected_concepts": "The candidate must describe the 'Unpivot' operation in Power Query. The steps are: 1. Load the data into the Power Query Editor. 2. Select the column(s) that should remain fixed (in this case, the 'Product' column). 3. Right-click the selected column's header and choose 'Unpivot Other Columns'. This transforms all other columns into an attribute-value pair, which can then be renamed to 'Year' and 'Sales'."
   }
 ]

@@ -1,4 +1,16 @@
-# AI-Powered Excel Mock Interviewer: A Technical Deep Dive
+# AI-Powered Excel Mock Interviewer
+
+### Live Demo & Architecture
+
+| Live Application | Technical Architecture |
+| :---: | :---: |
+| [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-ninja.streamlit.app/) | ![Technical Architecture](Untitled-2025-07-22-0151.jpg) |
+
+**Demonstration Video**
+
+*(A placeholder for your video. Once you have the GIF, you can replace this text with: `![AI Excel Interviewer Demo](path/to/your/demo.gif)`)*
+
+---
 
 ## 1. Project Mission & Business Context
 
@@ -36,7 +48,7 @@ We had full autonomy over the tech stack. The following choices were made to pri
 
 | Layer | Technology | Justification |
 | :--- | :--- | :--- |
-| **LLM** | **Google Gemini Pro** | The Gemini family of models offers a powerful, multi-modal, and cost-effective solution. Its strong **instruction-following capabilities** are vital for adhering to the zero-shot role-playing prompts that define the agent's persona and evaluation accuracy. The free API tier is more than sufficient for a PoC, enabling a powerful agent without incurring costs. |
+| **LLM** | **Google Gemini 1.5 Flash** | The Gemini family of models offers a powerful, multi-modal, and cost-effective solution. Its strong **instruction-following capabilities** are vital for adhering to the zero-shot role-playing prompts that define the agent's persona and evaluation accuracy. The live application is currently powered by a personal API key for demonstration purposes. |
 | **Orchestration** | **LangChain & LangGraph** | **LangChain** provides the essential abstractions for prompt management and tool integration. **LangGraph** is the architectural core, allowing us to model the interview flow as a **Finite State Machine (FSM)**. This is inherently more robust and debuggable than monolithic agent loops, enabling **explicit state transitions** (e.g., from `ASKING` to `EVALUATING`) which are critical for a structured, multi-turn process. |
 | **Frontend** | **Streamlit** | For a PoC, maximizing development velocity is key. Streamlit's **stateful rerun model** maps well to the request-response cycle of a chat application, enabling the creation of a functional, interactive UI with minimal boilerplate code. Its native components are ideal for both the chat interface and the admin dashboard. |
 | **Data Storage** | **Pandas & OpenPyXL** | We opted for a **lightweight, file-based persistence layer** to avoid the setup overhead of a relational or NoSQL database. This is a pragmatic choice for a PoC, where rapid iteration is more important than transactional integrity or concurrent access. |
@@ -84,17 +96,13 @@ This is the main Streamlit application file that orchestrates the user experienc
 
 ## 5. Usage Guide
 
-### a. For the Candidate (User)
+### a. Using the Deployed Application
 
-1.  **Navigate** to the application URL.
+1.  **Navigate** to the application URL: [https://excel-ninja.streamlit.app/](https://excel-ninja.streamlit.app/)
 2.  **Select** the "User" login type.
-3.  **Enter** your assigned username (e.g., `user1`, `user2`, or `user3`).
+3.  **Enter** an assigned username (e.g., `user1`, `user2`, or `user3`).
 4.  **Click** "Start Interview".
-5.  The AI interviewer, "Excel Ninja," will greet you and begin the interview.
-6.  **Answer** each question in the chat input at the bottom of the screen.
-7.  After each answer, the AI will provide an evaluation. This cycle will continue until the interview is complete.
-8.  At the end, a **Final Performance Report** will be displayed with your overall score and a breakdown of each question. Your results are automatically saved.
-9.  You can **Logout** after reviewing your report. You cannot take the interview again with the same username.
+5.  Follow the on-screen instructions to complete your interview. At the end, a **Final Performance Report** will be displayed with your overall score.
 
 ### b. For the Administrator
 
@@ -104,35 +112,22 @@ This is the main Streamlit application file that orchestrates the user experienc
     * Username: `admin`
     * Password: `admin`
 4.  **Click** "Login as Admin".
-5.  You will see the **Admin Dashboard**, which is a live, editable view of the `user_credential_and_analysis.xlsx` file.
+5.  You will see the **Admin Dashboard**, which is a live, editable view of the user data.
 6.  **View Results:** You can see which users have completed the interview (`test_taken` is `True`), their final ratings, and detailed evaluations.
 7.  **Configure Interviews:** For any user where `test_taken` is `False`, you can:
     * Change their `interview_type` using the dropdown (Static, Dynamic, Hybrid).
     * Set the `num_questions` for Dynamic or Hybrid interviews.
-8.  **Add/Edit Users:** You can directly add new rows to create new user credentials or edit existing usernames in the table.
-9.  **Save Changes:** After making any changes, click the "Save Changes" button to update the Excel file. The next time that user logs in, they will receive the interview you configured.
+8.  **Add/Edit Users:** You can directly add new rows to create new user credentials or **edit existing usernames** in the table.
+9.  **Save Changes:** After making any changes, click the "Save Changes" button to update the data file. The next time that user logs in, they will receive the interview you configured.
 
 ---
 
-## 6. Future Improvements & Scalability
-
-This PoC provides a robust foundation. A production-grade system would require the following enhancements:
-
-1.  **Database Migration:** Migrate from Excel to a relational database (e.g., PostgreSQL) to ensure **transactional integrity, concurrent access, and scalability**.
-2.  **Advanced Evaluation with Sandboxed Execution:** For questions expecting a specific Excel formula, we can use **LLM function calling** to extract the formula and execute it in a **sandboxed code environment** against a sample dataset. This allows for programmatic verification of correctness, moving beyond purely linguistic evaluation.
-3.  **Enhanced Frontend:** Implement features like a session timer, a progress bar indicating the question number, and the ability for users to flag questions they found unclear.
-4.  **Feedback Loop for Continuous Improvement (RLHF):** The admin dashboard could be expanded to allow admins to rate the quality of the AI's questions and evaluations. This feedback would serve as a **reward signal** for implementing a high-level **Reinforcement Learning from Human Feedback (RLHF)** loop, enabling continuous fine-tuning of the prompt templates.
-5.  **LLM as a Judge:** A significant future step would be to implement an "LLM as a Judge" architecture. This involves using a separate, powerful LLM (e.g., GPT-4, Claude 3 Opus) to evaluate the quality of the primary interviewer agent's questions, evaluations, and overall conversational behavior. This meta-evaluation could assess factors like fairness, clarity, and relevance, providing structured feedback to automatically improve the interviewer agent. This was not implemented due to the constraint of using a single, free-tier API key, but it represents a clear path to a more autonomous, self-improving system.
-6.  **Expanded Question Bank & Curriculum:** The `questions.json` curriculum could be significantly expanded and structured by topic and difficulty, covering a wider range of Excel capabilities like Power Query, advanced charting, and VBA macros.
-
----
-
-## 7. Setup and Installation
+## 6. Setup and Installation for Local Use
 
 Follow these steps to run the project locally.
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.9+
 - `pip` package installer
 
 ### Installation Steps
@@ -157,10 +152,11 @@ Follow these steps to run the project locally.
     ```
 
 4.  **Configure Environment Variables:**
-    Create a file named `.env` in the root of your project directory. This file is included in the project, but you must add your own API key. Open the file and replace the placeholder text with your key:
+    Create a file named `.env` in the root of your project directory. Open the file and add your own Google Gemini API key:
     ```env
     # Replace the placeholder with your actual Google Gemini API key
     GOOGLE_API_KEY="YOUR_GEMINI_API_KEY_HERE"
+    CHAT_MODEL='gemini-2.0-flash'
     ```
 
 5.  **Run the Application:**
@@ -169,3 +165,15 @@ Follow these steps to run the project locally.
     ```
 
     The application will now be running and accessible in your web browser, typically at `http://localhost:8501`.
+
+---
+
+## 7. Future Improvements & Scalability
+
+This PoC provides a robust foundation. A production-grade system would require the following enhancements:
+
+1.  **Database Migration:** Migrate from Excel to a relational database (e.g., PostgreSQL) to ensure **transactional integrity, concurrent access, and scalability**.
+2.  **Enhanced Frontend:** Implement features like a session timer and add the ability for users to flag questions they found unclear.
+3.  **Feedback Loop for Continuous Improvement (RLHF):** The admin dashboard could be expanded to allow admins to rate the quality of the AI's questions and evaluations. This feedback would serve as a **reward signal** for implementing a high-level **Reinforcement Learning from Human Feedback (RLHF)** loop, enabling continuous fine-tuning of the prompt templates.
+4.  **LLM as a Judge:** A significant future step would be to implement an "LLM as a Judge" architecture. This involves using a separate, powerful LLM (e.g., GPT-4, Claude 3 Opus) to evaluate the quality of the primary interviewer agent's questions, evaluations, and overall conversational behavior. This meta-evaluation could assess factors like fairness, clarity, and relevance, providing structured feedback to automatically improve the interviewer agent. This was not implemented due to the constraint of using a single, free-tier API key, but it represents a clear path to a more autonomous, self-improving system.
+5.  **Expanded Question Bank & Curriculum:** The `questions.json` curriculum could be significantly expanded and structured by topic and difficulty, covering a wider range of Excel capabilities like Power Query, advanced charting, and VBA macros.
